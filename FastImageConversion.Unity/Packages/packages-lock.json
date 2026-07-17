@@ -1,5 +1,35 @@
 {
   "dependencies": {
+    "com.popopo.fastimageconversion.core": {
+      "version": "file:FastImageConversion.Core",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.popopo.fastimageconversion.fpng": {
+      "version": "file:FastImageConversion.FPng",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.popopo.fastimageconversion.core": "1.136.0"
+      }
+    },
+    "com.popopo.fastimageconversion.png": {
+      "version": "file:FastImageConversion.Png",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.popopo.fastimageconversion.core": "1.136.0"
+      }
+    },
+    "com.popopo.fastimageconversion.webp": {
+      "version": "file:FastImageConversion.Webp",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.popopo.fastimageconversion.core": "1.136.0"
+      }
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.9",
       "depth": 0,
