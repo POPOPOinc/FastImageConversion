@@ -74,6 +74,14 @@ impl PngDecodingResult {
     }
 }
 
+#[repr(C)]
+pub struct PngInfoResult {
+    pub success: bool,
+    pub width: u32,
+    pub height: u32,
+    pub error_message: *const c_char,
+}
+
 fn new_error_message(msg: &str) -> *const c_char {
     let error_message = CString::new(msg)
         .unwrap_or_else(|_| CString::new("Unknown error").unwrap());
@@ -128,6 +136,58 @@ fn encode_png_internal(src: &[u8], width: u32, height: u32) -> Result<Vec<u8>, p
     writer.finish()?;
 
     Ok(dest)
+}
+
+/// Reads the PNG header and returns the image dimensions without decoding pixels.
+#[unsafe(no_mangle)]
+pub extern "C" fn fic_png_info(
+    src_ptr: *const u8,
+    src_length: i32,
+) -> PngInfoResult {
+    catch_unwind(AssertUnwindSafe(|| {
+        if src_ptr.is_null() || src_length <= 0 {
+            return PngInfoResult {
+                success: false,
+                width: 0,
+                height: 0,
+                error_message: new_error_message("src_ptr is null or src_length is invalid"),
+            };
+        }
+
+        let src_slice = unsafe {
+            slice::from_raw_parts(src_ptr, src_length as usize)
+        };
+
+        match png::Decoder::new(Cursor::new(src_slice)).read_info() {
+            Ok(reader) => {
+                let info = reader.info();
+                PngInfoResult {
+                    success: true,
+                    width: info.width,
+                    height: info.height,
+                    error_message: std::ptr::null(),
+                }
+            }
+            Err(e) => PngInfoResult {
+                success: false,
+                width: 0,
+                height: 0,
+                error_message: new_error_message(&e.to_string()),
+            },
+        }
+    })).unwrap_or_else(|_| PngInfoResult {
+        success: false,
+        width: 0,
+        height: 0,
+        error_message: new_error_message("panic in fic_png_info"),
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fic_png_info_dispose(result: PngInfoResult)  {
+    let _ = catch_unwind(AssertUnwindSafe(|| {
+        unsafe { free_error_message(result.error_message); }
+    }));
 }
 
 /// 任意のPNGを RGBA8 にデコードする
@@ -251,6 +311,22 @@ mod tests {
 
         fic_png_dispose(encoded);
         fic_png_decode_dispose(decoded);
+    }
+
+    #[test]
+    fn test_info() {
+        let (width, height) = (32u32, 16u32);
+        let src = checker_rgba(width as usize, height as usize);
+        let encoded = fic_png_encode(src.as_ptr(), src.len() as i32, width, height);
+        assert!(encoded.success);
+
+        let info = fic_png_info(encoded.output.ptr, encoded.output.length);
+        assert!(info.success);
+        assert_eq!(info.width, width);
+        assert_eq!(info.height, height);
+
+        fic_png_dispose(encoded);
+        fic_png_info_dispose(info);
     }
 
     #[test]

@@ -30,6 +30,15 @@ namespace FastImageConversion
         internal static extern PngEncodingResult fic_png_encode(byte* src_ptr, int src_length, uint width, uint height);
 
         /// <summary>
+        ///  Reads the PNG header and returns the image dimensions without decoding pixels.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "fic_png_info", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern PngInfoResult fic_png_info(byte* src_ptr, int src_length);
+
+        [DllImport(__DllName, EntryPoint = "fic_png_info_dispose", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern void fic_png_info_dispose(PngInfoResult result);
+
+        /// <summary>
         ///  任意のPNGを RGBA8 にデコードする
         /// </summary>
         [DllImport(__DllName, EntryPoint = "fic_png_decode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -68,6 +77,15 @@ namespace FastImageConversion
         ///  RGBA8 (R,G,B,A の順で1チャンネル1バイト)
         /// </summary>
         public ByteBuffer output;
+        public uint width;
+        public uint height;
+        public byte* error_message;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe partial struct PngInfoResult
+    {
+        [MarshalAs(UnmanagedType.U1)] public bool success;
         public uint width;
         public uint height;
         public byte* error_message;
