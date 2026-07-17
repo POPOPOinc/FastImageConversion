@@ -29,21 +29,25 @@ Measured with [Unity Performance Testing](https://docs.unity3d.com/Packages/com.
 
 ### Encode
 
-|                                     | latency (median) | encoded size |
-|-------------------------------------|-----------------|--------------|
-| UnityEngine.ImageConversion (PNG)   | 3.61 ms         | 152,839 B    |
-| FastImageConversion PNG (image-rs)  | **0.54 ms**     | 228,182 B    |
-| FastImageConversion PNG (fpng)      | **0.56 ms**     | 246,197 B    |
-| FastImageConversion WebP (lossy, default config) | **0.86 ms** | 4,360 B |
+vs `UnityEngine.ImageConversion.EncodeNativeArrayToPNG`:
+
+|                                     | latency (median) | vs UnityEngine | encoded size |
+|-------------------------------------|-----------------|----------------|--------------|
+| UnityEngine.ImageConversion (PNG)   | 3.61 ms         | 1.0x (baseline) | 152,839 B    |
+| FastImageConversion PNG (image-rs)  | **0.54 ms**     | **6.7x faster** | 228,182 B    |
+| FastImageConversion PNG (fpng)      | **0.56 ms**     | **6.4x faster** | 246,197 B    |
+| FastImageConversion WebP (lossy, default config) | **0.86 ms** | **4.2x faster** | 4,360 B |
 
 ### Decode
 
-|                                     | latency (median) |
-|-------------------------------------|-----------------|
-| UnityEngine ImageConversion.LoadImage (PNG) | 1.78 ms |
-| FastImageConversion PNG (image-rs)  | **0.58 ms**     |
-| FastImageConversion PNG (fpng)      | **0.72 ms**     |
-| FastImageConversion WebP            | **0.24 ms**     |
+vs `UnityEngine.ImageConversion.LoadImage`:
+
+|                                     | latency (median) | vs UnityEngine |
+|-------------------------------------|-----------------|----------------|
+| UnityEngine ImageConversion.LoadImage (PNG) | 1.78 ms | 1.0x (baseline) |
+| FastImageConversion PNG (image-rs)  | **0.58 ms**     | **3.1x faster** |
+| FastImageConversion PNG (fpng)      | **0.72 ms**     | **2.5x faster** |
+| FastImageConversion WebP            | **0.24 ms**     | **7.4x faster** |
 
 Notes:
 
