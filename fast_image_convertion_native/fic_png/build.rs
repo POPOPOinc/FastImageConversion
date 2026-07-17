@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .csharp_dll_name("libfic_png")
         .csharp_dll_name_if("UNITY_IOS && !UNITY_EDITOR", "__Internal")
         .csharp_use_function_pointer(false)
-        .generate_csharp_file("../../Packages/FastImageConversion.Png/Runtime/NativeMethods.g.cs")?;
+        .generate_csharp_file("../../FastImageConversion.Unity/Packages/FastImageConversion.Png/Runtime/NativeMethods.g.cs")?;
 
     Ok(())
 }

@@ -1,6 +1,6 @@
-UNITY_PLUGIN_DIR_PNG  := ../Packages/FastImageConversion.Png/Runtime
-UNITY_PLUGIN_DIR_FPNG := ../Packages/FastImageConversion.FPng/Runtime
-UNITY_PLUGIN_DIR_WEBP := ../Packages/FastImageConversion.Webp/Runtime
+UNITY_PLUGIN_DIR_PNG  := ../FastImageConversion.Unity/Packages/FastImageConversion.Png/Runtime
+UNITY_PLUGIN_DIR_FPNG := ../FastImageConversion.Unity/Packages/FastImageConversion.FPng/Runtime
+UNITY_PLUGIN_DIR_WEBP := ../FastImageConversion.Unity/Packages/FastImageConversion.Webp/Runtime
 
 .PHONY: all
 all: linux-x64 windows-x64 macos-arm64 ios-arm64 android-arm64

@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .csharp_dll_name_if("UNITY_IOS && !UNITY_EDITOR", "__Internal")
         .csharp_entry_point_prefix("")
         .csharp_use_function_pointer(false)
-        .generate_csharp_file("../../Packages/FastImageConversion.FPng/Runtime/NativeMethods.g.cs")?;
+        .generate_csharp_file("../../FastImageConversion.Unity/Packages/FastImageConversion.FPng/Runtime/NativeMethods.g.cs")?;
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=wrapper.cpp");
