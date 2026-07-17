@@ -170,7 +170,7 @@ catch (FPngDecodingException e) when (e.Status == FPngDecodeStatus.NotFPng)
 │   │   ├── FastImageConversion.FPng   # fpng ベースの PNG エンコーダー/デコーダー
 │   │   └── FastImageConversion.Webp   # libwebp ベースの WebP エンコーダー/デコーダー
 │   └── Assets/Tests              # 正しさ + パフォーマンステスト
-└── fast_image_convertion_native  # ネイティブプラグインを生成する Rust ワークスペース
+└── fast_image_conversion_native  # ネイティブプラグインを生成する Rust ワークスペース
     ├── fic_png                   # image-rs ラッパー
     ├── fic_fpng                  # fpng (C++、git submodule) ラッパー
     ├── fic_webp                  # libwebp ラッパー
@@ -190,7 +190,7 @@ git submodule update --init
 make でプラグインをビルドし、Unity パッケージへ配置します:
 
 ```bash
-cd fast_image_convertion_native
+cd fast_image_conversion_native
 
 # 全ターゲットをビルド
 make

@@ -6,7 +6,7 @@ This repository contains, or is distributed with, the following third-party soft
 
 ### fpng
 
-`fast_image_convertion_native/fic_fpng/vendor/fpng` is a git submodule of fpng.
+`fast_image_conversion_native/fic_fpng/vendor/fpng` is a git submodule of fpng.
 `fpng.cpp` / `fpng.h` are compiled into the prebuilt `libfic_fpng` binaries.
 
 - https://github.com/richgel999/fpng
@@ -16,7 +16,7 @@ This repository contains, or is distributed with, the following third-party soft
 ## Bundled in prebuilt native binaries
 
 The prebuilt native libraries under `FastImageConversion.Unity/Packages/*/Runtime/`
-are compiled from `fast_image_convertion_native` and statically include:
+are compiled from `fast_image_conversion_native` and statically include:
 
 ### libwebp
 

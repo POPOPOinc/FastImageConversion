@@ -170,7 +170,7 @@ catch (FPngDecodingException e) when (e.Status == FPngDecodeStatus.NotFPng)
 │   │   ├── FastImageConversion.FPng   # fpng based PNG encoder/decoder
 │   │   └── FastImageConversion.Webp   # libwebp based WebP encoder/decoder
 │   └── Assets/Tests              # correctness + performance tests
-└── fast_image_convertion_native  # Rust workspace producing the native plugins
+└── fast_image_conversion_native  # Rust workspace producing the native plugins
     ├── fic_png                   # image-rs wrapper
     ├── fic_fpng                  # fpng (C++, git submodule) wrapper
     ├── fic_webp                  # libwebp wrapper
@@ -190,7 +190,7 @@ git submodule update --init
 Then build and install the plugins into the Unity packages with make:
 
 ```bash
-cd fast_image_convertion_native
+cd fast_image_conversion_native
 
 # build all targets
 make
