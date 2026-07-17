@@ -90,75 +90,86 @@ RGBARGBARGBA...
 - R,G,B,A 各チャンネルは各1バイト (0-255)
 - 各種画像ライブラリの慣習に合わせて、原点は **左上** を期待します
 
-Unity の `GraphicsFormat.R8G8B8A8_UNorm` 形式とほぼ同一ですが、Unity のテクスチャは原点が **左下** なので、エンコード前に上下を反転させてください:
+Unity の `GraphicsFormat.R8G8B8A8_UNorm` 形式とほぼ同一ですが、Unity のテクスチャは原点が **左下** のため、間で上下反転が必要です。Texture2D ヘルパー (`EncodeTexture` / `DecodeToTexture` / `ToTexture2D`) はこれを自動で処理します。低レベル API を使う場合は `PixelUtility` で変換できます:
 
 ```csharp
 using FastImageConversion;
 
-NativeArray<byte> pixels = texture.GetRawTextureData<byte>();
-PixelSorting.FlipVerticalInplace(pixels, texture.width, texture.height);
+// 読み取り可能な Texture2D → 左上原点の RGBA8 ピクセル (反転込み)
+using var pixels = PixelUtility.GetPixelsTopLeft(texture, Allocator.Temp);
+
+// あるいは既存の RGBA8 バッファをその場で上下反転
+PixelUtility.FlipVertically(pixels, width, height);
 ```
 
 ### エンコード
 
+もっとも簡単な形 — 読み取り可能な `Texture2D` をエンコード (反転は内部で処理、メインスレッド限定):
+
 ```csharp
 using FastImageConversion;
 
-// PNG (fpng)
+File.WriteAllBytes(path, FPng.EncodeTexture(texture));         // PNG (fpng)
+File.WriteAllBytes(path, Png.EncodeTexture(texture));          // PNG (image-rs)
+File.WriteAllBytes(path, WebP.EncodeTexture(texture));         // WebP
+```
+
+低レベル API は RGBA8 ピクセル (`ReadOnlySpan<byte>` または `NativeArray<byte>`、左上原点) を受け取り、任意のスレッドから呼び出せます:
+
+```csharp
+// PNG
 using (var encoded = FPng.Encode(pixels, width, height))
 {
-    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
+    File.WriteAllBytes(path, encoded.ToArray());
 }
 
-// PNG (image-rs)
-using (var encoded = Png.Encode(pixels, width, height))
+// WebP (設定を明示する場合)
+var config = WebP.CreateConfig(WebPPreset.Picture, qualityFactor: 75f);
+// ほかに WebP.CreateFastConfig() (デフォルト) / WebP.CreateLosslessConfig() もあります
+using (var encoded = WebP.Encode(pixels, width, height, config))
 {
-    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
-}
-
-// WebP
-var config = Webp.CreateConfig(WebPPreset.Picture, qualityFactor: 75f);
-using (var encoded = Webp.Encode(pixels.AsReadOnlySpan(), width, height, config))
-{
-    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
+    File.WriteAllBytes(path, encoded.ToArray());
 }
 ```
 
 結果のハンドルはネイティブメモリを所有しており、`using` などで Dispose すると解放されます。
-`AsNativeArray()` はそのメモリへのゼロコピーのビューです。ハンドルの寿命を超えて使う場合はコピーしてください。
+`AsNativeArray()` / `AsSpan()` はそのメモリへのゼロコピーのビュー、`ToArray()` はマネージド配列へのコピーです。
 
 ### デコード
 
-すべてのデコーダーは RGBA8 (`GraphicsFormat.R8G8B8A8_UNorm` 相当) のピクセルデータを出力します:
+もっとも簡単な形 — `Texture2D` へデコード (反転は内部で処理、メインスレッド限定):
 
 ```csharp
-// PNG (任意のPNGファイル)
-using (var decoded = Png.Decode(pngBytes))
-{
-    var texture = new Texture2D((int)decoded.Width, (int)decoded.Height, TextureFormat.RGBA32, false);
-    texture.LoadRawTextureData(decoded.AsNativeArray());
-    texture.Apply();
-}
-
-// WebP
-using (var decoded = Webp.Decode(webpBytes))
-{
-    var meta = decoded.Meta; // width / height など
-    // ...
-}
+Texture2D texture = Png.DecodeToTexture(pngBytes);
+Texture2D texture = WebP.DecodeToTexture(webpBytes);
 ```
 
-`FPng.Decode` は fpng 自身がエンコードした PNG のみ読めます。任意の PNG は汎用デコーダーへフォールバックしてください:
+低レベル API は RGBA8 (`GraphicsFormat.R8G8B8A8_UNorm` 相当、左上原点) のピクセルデータを出力し、任意のスレッドから呼び出せます:
 
 ```csharp
-try
+using (var decoded = Png.Decode(pngBytes))
 {
-    using var decoded = FPng.Decode(bytes);
-    // ...
+    var width = decoded.Width;
+    var height = decoded.Height;
+    NativeArray<byte> rgba = decoded.AsNativeArray(); // ゼロコピーのビュー
+
+    // メインスレッド上なら decoded.ToTexture2D() で Texture2D 化できます (反転込み)
 }
-catch (FPngDecodingException e) when (e.Status == FPngDecodeStatus.NotFPng)
+
+// ピクセルをデコードせずヘッダ情報だけ読む
+PngMeta pngMeta = Png.Info(pngBytes);     // Width / Height
+WebPMeta webpMeta = WebP.Info(webpBytes); // Width / Height / HasAlpha / Format
+```
+
+fpng のデコーダーは fpng 自身がエンコードした PNG のみ読めます。`TryDecode` を使うと汎用デコーダーへ自然にフォールバックできます:
+
+```csharp
+if (!FPng.TryDecode(bytes, out var decoded))
 {
-    using var decoded = Png.Decode(bytes);
+    decoded = Png.Decode(bytes); // fpng 出力ではない → 汎用デコーダーで読む
+}
+using (decoded)
+{
     // ...
 }
 ```
@@ -169,7 +180,7 @@ catch (FPngDecodingException e) when (e.Status == FPngDecodeStatus.NotFPng)
 .
 ├── FastImageConversion.Unity     # パッケージとテストをホストする Unity プロジェクト
 │   ├── Packages
-│   │   ├── FastImageConversion.Core   # 共通ヘルパー (PixelSorting、ハンドル基底)
+│   │   ├── FastImageConversion.Core   # 共通ヘルパー (PixelUtility、ハンドル基底)
 │   │   ├── FastImageConversion.Png    # image-rs ベースの PNG エンコーダー/デコーダー
 │   │   ├── FastImageConversion.FPng   # fpng ベースの PNG エンコーダー/デコーダー
 │   │   └── FastImageConversion.Webp   # libwebp ベースの WebP エンコーダー/デコーダー

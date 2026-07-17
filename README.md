@@ -90,75 +90,86 @@ RGBARGBARGBA...
 - 1 byte per channel (0-255)
 - The origin is expected to be **top-left**, following common image library conventions
 
-This is almost identical to Unity's `GraphicsFormat.R8G8B8A8_UNorm`, but Unity textures have their origin at the **bottom-left**, so flip vertically before encoding:
+This is almost identical to Unity's `GraphicsFormat.R8G8B8A8_UNorm`, but Unity textures have their origin at the **bottom-left**, so a vertical flip is needed in between. The Texture2D helpers (`EncodeTexture` / `DecodeToTexture` / `ToTexture2D`) handle this automatically; for the low-level APIs, `PixelUtility` provides the conversions:
 
 ```csharp
 using FastImageConversion;
 
-NativeArray<byte> pixels = texture.GetRawTextureData<byte>();
-PixelSorting.FlipVerticalInplace(pixels, texture.width, texture.height);
+// Readable Texture2D -> RGBA8 pixels with a top-left origin (flip included)
+using var pixels = PixelUtility.GetPixelsTopLeft(texture, Allocator.Temp);
+
+// or flip an existing RGBA8 buffer in place
+PixelUtility.FlipVertically(pixels, width, height);
 ```
 
 ### Encode
 
+The simplest form — encode a readable `Texture2D` (flip handled internally, main thread only):
+
 ```csharp
 using FastImageConversion;
 
-// PNG (fpng)
+File.WriteAllBytes(path, FPng.EncodeTexture(texture));         // PNG (fpng)
+File.WriteAllBytes(path, Png.EncodeTexture(texture));          // PNG (image-rs)
+File.WriteAllBytes(path, WebP.EncodeTexture(texture));         // WebP
+```
+
+The low-level APIs take RGBA8 pixels (`ReadOnlySpan<byte>` or `NativeArray<byte>`, top-left origin) and are callable from any thread:
+
+```csharp
+// PNG
 using (var encoded = FPng.Encode(pixels, width, height))
 {
-    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
+    File.WriteAllBytes(path, encoded.ToArray());
 }
 
-// PNG (image-rs)
-using (var encoded = Png.Encode(pixels, width, height))
+// WebP with an explicit config
+var config = WebP.CreateConfig(WebPPreset.Picture, qualityFactor: 75f);
+// also: WebP.CreateFastConfig() (default) / WebP.CreateLosslessConfig()
+using (var encoded = WebP.Encode(pixels, width, height, config))
 {
-    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
-}
-
-// WebP
-var config = Webp.CreateConfig(WebPPreset.Picture, qualityFactor: 75f);
-using (var encoded = Webp.Encode(pixels.AsReadOnlySpan(), width, height, config))
-{
-    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
+    File.WriteAllBytes(path, encoded.ToArray());
 }
 ```
 
 The result handles own native memory; disposing them (e.g. with `using`) frees it.
-`AsNativeArray()` is a zero-copy view into that memory — copy it if you need it beyond the handle's lifetime.
+`AsNativeArray()` / `AsSpan()` are zero-copy views into that memory; `ToArray()` copies it into a managed array.
 
 ### Decode
 
-All decoders produce RGBA8 (`GraphicsFormat.R8G8B8A8_UNorm` compatible) pixel data:
+The simplest form — decode into a `Texture2D` (flip handled internally, main thread only):
 
 ```csharp
-// PNG (arbitrary PNG files)
-using (var decoded = Png.Decode(pngBytes))
-{
-    var texture = new Texture2D((int)decoded.Width, (int)decoded.Height, TextureFormat.RGBA32, false);
-    texture.LoadRawTextureData(decoded.AsNativeArray());
-    texture.Apply();
-}
-
-// WebP
-using (var decoded = Webp.Decode(webpBytes))
-{
-    var meta = decoded.Meta; // width / height etc.
-    // ...
-}
+Texture2D texture = Png.DecodeToTexture(pngBytes);
+Texture2D texture = WebP.DecodeToTexture(webpBytes);
 ```
 
-`FPng.Decode` only reads PNGs encoded by fpng itself. For arbitrary PNGs, fall back to the general-purpose decoder:
+The low-level APIs produce RGBA8 (`GraphicsFormat.R8G8B8A8_UNorm` compatible) pixel data with a top-left origin, callable from any thread:
 
 ```csharp
-try
+using (var decoded = Png.Decode(pngBytes))
 {
-    using var decoded = FPng.Decode(bytes);
-    // ...
+    var width = decoded.Width;
+    var height = decoded.Height;
+    NativeArray<byte> rgba = decoded.AsNativeArray(); // zero-copy view
+
+    // on the main thread, decoded.ToTexture2D() creates a Texture2D (flip included)
 }
-catch (FPngDecodingException e) when (e.Status == FPngDecodeStatus.NotFPng)
+
+// Header-only peek without decoding pixels
+PngMeta pngMeta = Png.Info(pngBytes);   // Width / Height
+WebPMeta webpMeta = WebP.Info(webpBytes); // Width / Height / HasAlpha / Format
+```
+
+The fpng decoder only reads PNGs encoded by fpng itself. Use `TryDecode` to fall back to the general-purpose decoder:
+
+```csharp
+if (!FPng.TryDecode(bytes, out var decoded))
 {
-    using var decoded = Png.Decode(bytes);
+    decoded = Png.Decode(bytes); // not written by fpng — use the general-purpose decoder
+}
+using (decoded)
+{
     // ...
 }
 ```
@@ -169,7 +180,7 @@ catch (FPngDecodingException e) when (e.Status == FPngDecodeStatus.NotFPng)
 .
 ├── FastImageConversion.Unity     # Unity project hosting the packages and tests
 │   ├── Packages
-│   │   ├── FastImageConversion.Core   # shared helpers (PixelSorting, handle base)
+│   │   ├── FastImageConversion.Core   # shared helpers (PixelUtility, handle bases)
 │   │   ├── FastImageConversion.Png    # image-rs based PNG encoder/decoder
 │   │   ├── FastImageConversion.FPng   # fpng based PNG encoder/decoder
 │   │   └── FastImageConversion.Webp   # libwebp based WebP encoder/decoder
