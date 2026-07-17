@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use std::{ptr, slice};
-use std::ffi::{c_char, c_void, CStr, CString};
+use std::ffi::{c_void, CStr};
 use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 use fic_fpng::{fpng_encode_image_to_memory, fpng_free, fpng_init};
