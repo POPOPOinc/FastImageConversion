@@ -20,20 +20,84 @@ are compiled from `fast_image_conversion_native` and statically include:
 
 ### libwebp
 
-Compiled and linked via the libwebp-sys crate into `libfic_webp`.
+Compiled and linked via the libwebp-sys crate (MIT License) into `libfic_webp`.
+Additional patent rights are granted under the WebM PATENTS file.
 
 - https://chromium.googlesource.com/webm/libwebp
 - Copyright (c) 2010, Google Inc.
-- Licensed under the BSD 3-Clause License
+- Licensed under the BSD 3-Clause License:
 
-### image-rs / png (and transitive crates)
+```
+Copyright (c) 2010, Google Inc. All rights reserved.
 
-Linked into `libfic_png`, including transitive dependencies such as miniz_oxide,
-crc32fast, flate2, and fdeflate.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
 
-- https://github.com/image-rs/image-png
-- Copyright (c) 2015 nwin
-- Licensed under the MIT License or Apache License 2.0
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+  * Neither the name of Google nor the names of its contributors may
+    be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+### Rust crates
+
+The following crates are statically linked into the prebuilt binaries.
+All of them are used under the MIT License (most are dual-licensed MIT OR Apache-2.0):
+
+| crate | license |
+|-------|---------|
+| [png](https://crates.io/crates/png) | MIT OR Apache-2.0 |
+| [fdeflate](https://crates.io/crates/fdeflate) | MIT OR Apache-2.0 |
+| [flate2](https://crates.io/crates/flate2) | MIT OR Apache-2.0 |
+| [miniz_oxide](https://crates.io/crates/miniz_oxide) | MIT OR Zlib OR Apache-2.0 |
+| [crc32fast](https://crates.io/crates/crc32fast) | MIT OR Apache-2.0 |
+| [simd-adler32](https://crates.io/crates/simd-adler32) | MIT |
+| [adler2](https://crates.io/crates/adler2) | 0BSD OR MIT OR Apache-2.0 |
+| [bitflags](https://crates.io/crates/bitflags) | MIT OR Apache-2.0 |
+| [cfg-if](https://crates.io/crates/cfg-if) | MIT OR Apache-2.0 |
+| [libwebp-sys](https://crates.io/crates/libwebp-sys) | MIT |
+
+MIT License text (applies to each crate above with its respective copyright holders):
+
+```
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ### Rust Standard Library
 
