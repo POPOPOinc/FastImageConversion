@@ -1,3 +1,4 @@
+using System;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
@@ -5,7 +6,7 @@ namespace FastImageConversion
 {
     public static partial class Png
     {
-        public static unsafe PngEncodingResultHandle Encode(NativeArray<byte> source, uint width, uint height) 
+        public static unsafe PngEncodingResultHandle Encode(NativeArray<byte> source, uint width, uint height)
         {
             var sourcePtr = (byte*)source.GetUnsafePtr();
             var result = NativeMethods.fic_png_encode(sourcePtr, source.Length, width, height);
@@ -22,6 +23,30 @@ namespace FastImageConversion
                 }
             }
             return new PngEncodingResultHandle(result);
+        }
+
+        /// <summary>
+        /// 任意のPNGを RGBA8 にデコードする
+        /// </summary>
+        public static unsafe PngDecodingResultHandle Decode(ReadOnlySpan<byte> source)
+        {
+            fixed (byte* sourcePtr = &source.GetPinnableReference())
+            {
+                var result = NativeMethods.fic_png_decode(sourcePtr, source.Length);
+                if (!result.success)
+                {
+                    try
+                    {
+                        var message = new string((sbyte*)result.error_message);
+                        throw new PngDecodingException(message);
+                    }
+                    finally
+                    {
+                        NativeMethods.fic_png_decode_dispose(result);
+                    }
+                }
+                return new PngDecodingResultHandle(result);
+            }
         }
     }
 }
