@@ -1,0 +1,13 @@
+[package]
+name = "fic_webp"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+libwebp-sys = "0.14.1"
+
+[build-dependencies]
+csbindgen = "1.9.7"

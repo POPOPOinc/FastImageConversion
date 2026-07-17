@@ -1,0 +1,49 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+*.DotSettings.user
+.vscode/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Rust
+target/
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+ExportedObj/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+sysinfo.txt
+crashlytics-build.properties
+
+# Unity builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Unity test results
+TestResults*.xml
+PerformanceTestResults*.json

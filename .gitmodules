@@ -1,0 +1,3 @@
+[submodule "fast_image_convertion_native/fic_fpng/vendor/fpng"]
+	path = fast_image_convertion_native/fic_fpng/vendor/fpng
+	url = https://github.com/richgel999/fpng.git

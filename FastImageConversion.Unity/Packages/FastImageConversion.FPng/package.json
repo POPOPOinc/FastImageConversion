@@ -1,0 +1,11 @@
+{
+    "name": "com.popopo.fastimageconversion.fpng",
+    "version": "1.153.5",
+    "displayName": "FastImageConversion.FPng",
+    "description": "",
+    "unity": "2022.3",
+    "author": "Popopo Inc.",
+    "dependencies": {
+        "com.popopo.fastimageconversion.core": "1.136.0"
+    }
+}

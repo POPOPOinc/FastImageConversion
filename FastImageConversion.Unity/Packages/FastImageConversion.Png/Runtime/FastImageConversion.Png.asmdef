@@ -1,0 +1,16 @@
+{
+    "name": "FastImageConversion.Png",
+    "rootNamespace": "",
+    "references": [
+        "GUID:d5a8222b206e64079bc7f419c071dcc2"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

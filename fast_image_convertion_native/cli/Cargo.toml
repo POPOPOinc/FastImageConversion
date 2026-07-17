@@ -1,0 +1,10 @@
+[package]
+name = "fic"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+fic_png = { path = "../fic_png" }
+fic_webp = { path = "../fic_webp" }
+fic_fpng = { path = "../fic_fpng" }
+clap =  { version = "4.5.53", features = ["derive"]}
