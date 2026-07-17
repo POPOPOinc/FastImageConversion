@@ -1,114 +1,235 @@
 # FastImageConversion
 
-Unity向け、画像エンコード処理を提供するプラグインです。
+English | [日本語](./README.ja.md)
 
-現在、以下のフォーマットに対応しています
-- png
-  - 二種類の実装から選択可能
-      - rustの[image-rs/png](https://github.com/image-rs/image-png) 実装
-      - c++の[fpng](https://github.com/richgel999/fpng) 実装
-- webp
-  - libwebpのエンコード速度に最適化したビルド
-  
-  
-また、UnityEngine.ImageConversion と違って、全ての機能をメインスレッド以外から利用可能です。
+Fast image encoding / decoding plugins for Unity, implemented as thin native libraries.
+
+Unlike `UnityEngine.ImageConversion`, every API is callable **from any thread** (not just the Unity main thread), and both encoding and decoding are considerably faster.
 
 ## Features
 
-|      | Encode | Decode |
-|------|---------------|--------|
-| Webp | :white_check_mark: | :white_check_mark: |
-| PNG (fpng) | :white_check_mark: | :x: |
-| PNG (image-rs) | :white_check_mark: | :x: |
-| Jpeg | :x: | :x: |
+|                | Encode             | Decode |
+|----------------|--------------------|--------|
+| WebP           | :white_check_mark: | :white_check_mark: |
+| PNG (image-rs) | :white_check_mark: | :white_check_mark: |
+| PNG (fpng)     | :white_check_mark: | :white_check_mark: (fpng-encoded files only) |
+| JPEG           | :x:                | :x: |
 
+- **Off-main-thread**: no dependency on the Unity main thread. Encode/decode from worker threads or your own job code
+- **Two PNG implementations to choose from**:
+    - [image-rs/png](https://github.com/image-rs/image-png) — pure Rust, general-purpose decoder/encoder
+    - [fpng](https://github.com/richgel999/fpng) — very fast SSE-optimized C++ encoder. Its decoder only reads PNGs produced by fpng itself; fall back to the image-rs decoder for arbitrary PNGs
+- **WebP** — libwebp build tuned for encoding speed. Lossy and lossless are both supported
+- **Zero-copy results** — encoded/decoded results live in native memory and are exposed as `NativeArray<byte>` views; ownership is managed by `SafeHandle`
 
+## Performance
 
-## パフォーマンス
+Median of 20 runs, 360x280 RGBA8 synthetic photo-like test image, Apple M4, inside the Unity 6000.3 Editor.
+Measured with [Unity Performance Testing](https://docs.unity3d.com/Packages/com.unity.test-framework.performance@3.1/manual/index.html) — see `Assets/Tests/ImageConversionPerformanceTests.cs` to reproduce.
 
-|      | latency(median) | size |
-|------|---------------|--------|
-| UnityEngine.ImageConversion (PNG) | 29.29ms | 87,348B |
-| FastImageConversion (WEBP) | 16.26ms | 9,950B |
-| FastImageConversion (PNG\|image-rs) | 4.31ms | 82,459B |
-| FastImageConversion (PNG\|richgel999/fpng) | 3.04ms | 88,362B |
+### Encode
 
-- SpaceThumbnailServer 出力の 360x280 テクスチャを入力にとった場合のサンプル
-- apple m4 / Unityエディタ上
+|                                     | latency (median) | encoded size |
+|-------------------------------------|-----------------|--------------|
+| UnityEngine.ImageConversion (PNG)   | 3.61 ms         | 152,839 B    |
+| FastImageConversion PNG (image-rs)  | **0.54 ms**     | 228,182 B    |
+| FastImageConversion PNG (fpng)      | **0.56 ms**     | 246,197 B    |
+| FastImageConversion WebP (lossy, default config) | **0.86 ms** | 4,360 B |
 
+### Decode
 
-## プロジェクト構造
+|                                     | latency (median) |
+|-------------------------------------|-----------------|
+| UnityEngine ImageConversion.LoadImage (PNG) | 1.78 ms |
+| FastImageConversion PNG (image-rs)  | **0.58 ms**     |
+| FastImageConversion PNG (fpng)      | **0.72 ms**     |
+| FastImageConversion WebP            | **0.24 ms**     |
 
-各ネイティブプラグインは、Rustのビルドツールチェインを使ってビルドされています。
+Notes:
 
-`fast_image_conversion` ディレクトリにあるRustワークスペースから、各ネイティブプラグインのビルドが行えるようになっています。
+- The PNG encoders are configured for **speed over compression ratio** (fastest compression level), so their output is larger than Unity's default PNG output. If output size matters, WebP is dramatically smaller at comparable speed
+- `ImageConversion.LoadImage` also uploads the result to a `Texture2D`, so the decode comparison is not strictly apples-to-apples — but it is the API you would otherwise use
 
-- fic_fpng
-  - c++製のfpngと、Unity用のC ABIラッパーを提供するプロジェクトです
-- fic_png
-  - image-rsに依存したpngエンコーダーと、Unity用のラッパーを提供するプロジェクトです
-- fic_webp
-  - libwebp-sys crateで libwebpをビルドして、Unity用のC ABIを提供するプロジェクトです
-  
+## Supported platforms
 
-### ビルド手順
+Prebuilt binaries are included for:
 
-このプラグインは 現在、SpaceThumbnailServerからのみの利用を想定しているため、以下の環境のネイティブプラグインを作成しています
+| Plugin | linux-x64 | windows-x64 | macOS-arm64 | iOS-arm64 | Android-arm64 |
+|--------|-----------|-------------|-------------|-----------|---------------|
+| PNG (image-rs) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| WebP   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| PNG (fpng) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x: |
 
-- Linux (x64)
-- Windows (x64)
-- macOS (arm64)
+Other targets can be produced from source (see [Building](#building-from-source)).
 
-makeコマンドで、各ターゲットをcargoでクロスビルドし、Unityアセットとして配置します
+## Installation
 
-```bash
-# 一括で3つのターゲットをビルドする
-$ make
+Add the packages you need via UPM (git URL). `FastImageConversion.Core` is required by all codec packages:
 
-# ターゲットを指定したビルド
-$ make linux-x64
-$ make windows-x64
-$ make macos-arm64
 ```
-
-#### ビルドが通らない場合
-
-fpng のビルドには c++のクロスビルドが必要になりますが、rustupだけだとc++のクロスビルドツールがサポートされるわけではないので、
-ビルドのためには実機が必要になるかもしれません。
-
-- macOSで linux-x64 ビルドが通らない場合
-  - build/ ディレクトリにあるdocker-compose.yaml で コンテナを立ち上げて、その中でビルドするとうまくいきます
-  - ```bash
-    $ docker compose run --rm rust-builder-x64 bash
-    # make build-linux-x64
-    # exit
-    $ make install-linux-x64
-    ```
-- windowsからクロスビルドが通らない場合
-  - TODO:
-
-TODO: CI でネイティブプラグインを焼くアクションを用意したい
-
+https://github.com/POPOPOinc/FastImageConversion.git?path=FastImageConversion.Unity/Packages/FastImageConversion.Core
+https://github.com/POPOPOinc/FastImageConversion.git?path=FastImageConversion.Unity/Packages/FastImageConversion.Png
+https://github.com/POPOPOinc/FastImageConversion.git?path=FastImageConversion.Unity/Packages/FastImageConversion.FPng
+https://github.com/POPOPOinc/FastImageConversion.git?path=FastImageConversion.Unity/Packages/FastImageConversion.Webp
+```
 
 ## Usage
 
-ネイティブプラグイン側が入力にとる画像データは、4バイト1組のピクセルデータが連続して並んだものです。
+### Pixel format
+
+The native plugins take pixel data as consecutive 4-byte RGBA pixels:
 
 ```
-RGBARGBARGBA..
+RGBARGBARGBA...
 ```
 
-- R,G,B,A 各チャンネルは 各1バイト
-    - 1バイト0-255 が 0-1 を意味します
-- 各種画像ライブラリに合わせて、左上が原点になっていることを期待します。
+- 1 byte per channel (0-255)
+- The origin is expected to be **top-left**, following common image library conventions
 
-Unity の `GraphicsFormat.R8G8B8A8_UNorm` 形式とほぼ同一ですが、Unityのテクスチャは原点が **左下** なので、
-ネイティブプラグインに渡す前に上下を反転させる必要があります。
+This is almost identical to Unity's `GraphicsFormat.R8G8B8A8_UNorm`, but Unity textures have their origin at the **bottom-left**, so flip vertically before encoding:
 
-### Unity plugins
+```csharp
+using FastImageConversion;
 
-TODO:
+NativeArray<byte> pixels = texture.GetRawTextureData<byte>();
+PixelSorting.FlipVerticalInplace(pixels, texture.width, texture.height);
+```
 
-### cli tool
+### Encode
 
-TODO:
+```csharp
+using FastImageConversion;
+
+// PNG (fpng)
+using (var encoded = FPng.Encode(pixels, width, height))
+{
+    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
+}
+
+// PNG (image-rs)
+using (var encoded = Png.Encode(pixels, width, height))
+{
+    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
+}
+
+// WebP
+var config = Webp.CreateConfig(WebPPreset.Picture, qualityFactor: 75f);
+using (var encoded = Webp.Encode(pixels.AsReadOnlySpan(), width, height, config))
+{
+    File.WriteAllBytes(path, encoded.AsNativeArray().ToArray());
+}
+```
+
+The result handles own native memory; disposing them (e.g. with `using`) frees it.
+`AsNativeArray()` is a zero-copy view into that memory — copy it if you need it beyond the handle's lifetime.
+
+### Decode
+
+All decoders produce RGBA8 (`GraphicsFormat.R8G8B8A8_UNorm` compatible) pixel data:
+
+```csharp
+// PNG (arbitrary PNG files)
+using (var decoded = Png.Decode(pngBytes))
+{
+    var texture = new Texture2D((int)decoded.Width, (int)decoded.Height, TextureFormat.RGBA32, false);
+    texture.LoadRawTextureData(decoded.AsNativeArray());
+    texture.Apply();
+}
+
+// WebP
+using (var decoded = Webp.Decode(webpBytes))
+{
+    var meta = decoded.Meta; // width / height etc.
+    // ...
+}
+```
+
+`FPng.Decode` only reads PNGs encoded by fpng itself. For arbitrary PNGs, fall back to the general-purpose decoder:
+
+```csharp
+try
+{
+    using var decoded = FPng.Decode(bytes);
+    // ...
+}
+catch (FPngDecodingException e) when (e.Status == FPngDecodeStatus.NotFPng)
+{
+    using var decoded = Png.Decode(bytes);
+    // ...
+}
+```
+
+## Project structure
+
+```
+.
+├── FastImageConversion.Unity     # Unity project hosting the packages and tests
+│   ├── Packages
+│   │   ├── FastImageConversion.Core   # shared helpers (PixelSorting, handle base)
+│   │   ├── FastImageConversion.Png    # image-rs based PNG encoder/decoder
+│   │   ├── FastImageConversion.FPng   # fpng based PNG encoder/decoder
+│   │   └── FastImageConversion.Webp   # libwebp based WebP encoder/decoder
+│   └── Assets/Tests              # correctness + performance tests
+└── fast_image_convertion_native  # Rust workspace producing the native plugins
+    ├── fic_png                   # image-rs wrapper
+    ├── fic_fpng                  # fpng (C++, git submodule) wrapper
+    ├── fic_webp                  # libwebp wrapper
+    └── cli                       # small CLI for local testing
+```
+
+Each native plugin is built with the Rust toolchain. C# bindings (`NativeMethods.g.cs`) are generated at build time by [csbindgen](https://github.com/Cysharp/csbindgen).
+
+## Building from source
+
+fpng is referenced as a git submodule — clone with `--recursive`, or run:
+
+```bash
+git submodule update --init
+```
+
+Then build and install the plugins into the Unity packages with make:
+
+```bash
+cd fast_image_convertion_native
+
+# build all targets
+make
+
+# or a single target
+make linux-x64
+make windows-x64
+make macos-arm64
+make ios-arm64
+make android-arm64
+```
+
+### If a cross build fails
+
+fpng requires a C++ cross toolchain, which rustup alone does not provide.
+
+- **linux-x64 from macOS**: build inside the provided Docker container:
+  ```bash
+  cd build
+  docker compose run --rm rust-builder-x64 bash
+  # make build-linux-x64
+  # exit
+  make install-linux-x64
+  ```
+- **windows-x64 from macOS**: requires mingw-w64 (`brew install mingw-w64`)
+- **android-arm64**: requires the Android NDK (`cargo install cargo-ndk`); the fpng plugin is currently not built for Android
+
+## Running the tests
+
+Open `FastImageConversion.Unity` and run the EditMode tests from the Test Runner, or from the command line:
+
+```bash
+Unity -batchmode -projectPath FastImageConversion.Unity \
+  -runTests -testPlatform EditMode \
+  -testResults results.xml -perfTestResults perf.json
+```
+
+## License
+
+MIT License — see [LICENSE](./LICENSE).
+
+This repository bundles or links third-party software (fpng, libwebp, image-rs, and others) — see [THIRDPARTY_NOTICES.md](./THIRDPARTY_NOTICES.md).
