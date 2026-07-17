@@ -1,59 +1,46 @@
 using System;
-using System.Runtime.InteropServices;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace FastImageConversion
 {
-    public class FPngDecodingResultHandle : SafeHandle
+    public class FPngDecodingResultHandle : DecodingResultHandle
     {
-        public override bool IsInvalid => handle == IntPtr.Zero;
+        public override int Width { get; }
+        public override int Height { get; }
 
-        public uint Width { get; }
-        public uint Height { get; }
         /// <summary>
-        /// 元ファイルのチャンネル数 (3 = RGB, 4 = RGBA)。デコード結果は常にRGBA8
+        /// Number of channels in the source file (3 = RGB, 4 = RGBA).
+        /// The decoded pixel data is always RGBA8 regardless of this value.
         /// </summary>
-        public uint ChannelsInFile { get; }
+        public int SourceChannels { get; }
 
-        NativeArray<byte> _nativeArray;
+        unsafe byte* _dataPtr;
+        readonly int _dataLength;
 
         internal unsafe FPngDecodingResultHandle(
             void* contextPtr,
             byte* dataPtr,
             int dataLength,
-            uint width,
-            uint height,
-            uint channelsInFile) : base((IntPtr)contextPtr, true)
+            int width,
+            int height,
+            int sourceChannels) : base((IntPtr)contextPtr, true)
         {
             Width = width;
             Height = height;
-            ChannelsInFile = channelsInFile;
-            _nativeArray = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(
-                dataPtr,
-                dataLength,
-                Allocator.None);
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref _nativeArray, AtomicSafetyHandle.GetTempMemoryHandle());
-#endif
+            SourceChannels = sourceChannels;
+            _dataPtr = dataPtr;
+            _dataLength = dataLength;
         }
 
-        /// <summary>
-        /// RGBA8 (GraphicsFormat.R8G8B8A8_UNorm 相当) のデコード結果
-        /// </summary>
-        public NativeArray<byte> AsNativeArray()
+        public override unsafe NativeArray<byte> AsNativeArray()
         {
-            if (IsClosed || IsInvalid)
-            {
-                throw new ObjectDisposedException(nameof(FPngDecodingResultHandle));
-            }
-            return _nativeArray;
+            return CreateView(_dataPtr, _dataLength);
         }
 
-        protected override unsafe bool ReleaseHandle()
+        protected override unsafe bool ReleaseNativeMemory()
         {
-            if (IsInvalid) return false;
-            NativeMethods.fpng_free((void*)DangerousGetHandle());
+            NativeMethods.fpng_free((void*)handle);
+            _dataPtr = null;
             return true;
         }
     }

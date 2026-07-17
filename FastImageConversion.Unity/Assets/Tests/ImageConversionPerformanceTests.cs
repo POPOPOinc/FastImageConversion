@@ -27,11 +27,11 @@ public class ImageConversionPerformanceTests
         _source = TestImage.Generate(Width, Height, Allocator.Persistent);
 
         using var png = Png.Encode(_source, Width, Height);
-        _pngBytes = png.AsNativeArray().ToArray();
+        _pngBytes = png.ToArray();
         using var fpng = FPng.Encode(_source, Width, Height);
-        _fpngBytes = fpng.AsNativeArray().ToArray();
-        using var webp = Webp.Encode(_source.AsReadOnlySpan(), Width, Height);
-        _webpBytes = webp.AsNativeArray().ToArray();
+        _fpngBytes = fpng.ToArray();
+        using var webp = WebP.Encode(_source, Width, Height);
+        _webpBytes = webp.ToArray();
     }
 
     [OneTimeTearDown]
@@ -94,7 +94,7 @@ public class ImageConversionPerformanceTests
     {
         Measure.Method(() =>
             {
-                using var encoded = Webp.Encode(_source.AsReadOnlySpan(), Width, Height);
+                using var encoded = WebP.Encode(_source, Width, Height);
             })
             .WarmupCount(WarmupCount)
             .MeasurementCount(MeasurementCount)
@@ -146,7 +146,7 @@ public class ImageConversionPerformanceTests
     {
         Measure.Method(() =>
             {
-                using var decoded = Webp.Decode(_webpBytes);
+                using var decoded = WebP.Decode(_webpBytes);
             })
             .WarmupCount(WarmupCount)
             .MeasurementCount(MeasurementCount)

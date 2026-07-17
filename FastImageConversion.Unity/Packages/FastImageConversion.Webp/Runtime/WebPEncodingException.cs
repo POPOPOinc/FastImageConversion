@@ -2,14 +2,33 @@ using System;
 
 namespace FastImageConversion
 {
-    public class WebpEncodingException : Exception
+    /// <summary>
+    /// libwebp encoding error codes (VP8_ENC_ERROR_*).
+    /// </summary>
+    public enum WebPEncodingError
     {
-        public WebpEncodingException(string message) : base(message)
+        None = 0,
+        OutOfMemory = 1,
+        BitstreamOutOfMemory = 2,
+        NullParameter = 3,
+        InvalidConfiguration = 4,
+        BadDimension = 5,
+        Partition0Overflow = 6,
+        PartitionOverflow = 7,
+        BadWrite = 8,
+        FileTooBig = 9,
+        UserAbort = 10,
+        Last = 11,
+    }
+
+    public class WebPEncodingException : Exception
+    {
+        public WebPEncodingError Error { get; }
+
+        public WebPEncodingException(WebPEncodingError error)
+            : base($"Failed to encode WebP: {error}")
         {
-        }
-        
-        internal WebpEncodingException(WebpEncodingErrorCode errorCode) : base(errorCode.ToString())
-        {
+            Error = error;
         }
     }
 }

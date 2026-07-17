@@ -1,21 +1,24 @@
 namespace FastImageConversion
 {
-    public enum WebpFormat
+    public enum WebPFormat
     {
         Undefined,
         Lossy,
         Lossless,
     }
-    
-    public struct WebpMeta
+
+    /// <summary>
+    /// WebP header information.
+    /// </summary>
+    public struct WebPMeta
     {
         public int Width;
         public int Height;
         public bool HasAlpha;
         public bool HasAnimation;
-        public WebpFormat Format;
+        public WebPFormat Format;
 
-        internal WebpMeta(WebPBitstreamFeatures features)
+        internal WebPMeta(WebPBitstreamFeatures features)
         {
             Width = features.Width;
             Height = features.Height;
@@ -23,9 +26,9 @@ namespace FastImageConversion
             HasAnimation = features.HasAnimation != 0;
             Format = features.Format switch
             {
-                1 => WebpFormat.Lossy,
-                2 => WebpFormat.Lossless,
-                _ => WebpFormat.Undefined
+                1 => WebPFormat.Lossy,
+                2 => WebPFormat.Lossless,
+                _ => WebPFormat.Undefined
             };
         }
     }

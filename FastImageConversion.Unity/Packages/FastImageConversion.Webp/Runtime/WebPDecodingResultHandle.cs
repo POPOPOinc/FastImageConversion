@@ -1,43 +1,30 @@
 using System;
-using System.Runtime.InteropServices;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace FastImageConversion
 {
-    public class WebpDecodingResultHandle : SafeHandle
+    public class WebPDecodingResultHandle : DecodingResultHandle
     {
-        public override bool IsInvalid => handle == IntPtr.Zero;
+        public override int Width => _source.meta.Width;
+        public override int Height => _source.meta.Height;
 
-        public WebpMeta Meta => new(_source.meta);
+        public WebPMeta Meta => new(_source.meta);
 
         private WebpDecodingResult _source;
 
-        internal unsafe WebpDecodingResultHandle(WebpDecodingResult decodingResult) :
+        internal WebPDecodingResultHandle(WebpDecodingResult decodingResult) :
             base(decodingResult.output.U.RGBA.RGBA, true)
         {
             _source = decodingResult;
         }
 
-        public unsafe NativeArray<byte> AsNativeArray()
+        public override unsafe NativeArray<byte> AsNativeArray()
         {
-            if (IsClosed || IsInvalid)
-            {
-                throw new ObjectDisposedException(nameof(WebpDecodingResultHandle));
-            }
-
             var rgba = _source.output.U.RGBA;
-            var nativeArray = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(
-                (void*)rgba.RGBA,
-                (int)rgba.Size,
-                Allocator.None);
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref nativeArray, AtomicSafetyHandle.GetTempUnsafePtrSliceHandle());
-#endif
-            return nativeArray;
+            return CreateView((void*)rgba.RGBA, (int)rgba.Size);
         }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseNativeMemory()
         {
             if (_source.output.U.RGBA.RGBA == IntPtr.Zero) return true;
             NativeMethods.fic_webp_decode_dispose(_source);
