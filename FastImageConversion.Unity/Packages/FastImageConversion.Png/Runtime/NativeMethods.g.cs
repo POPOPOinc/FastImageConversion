@@ -29,8 +29,17 @@ namespace FastImageConversion
         [DllImport(__DllName, EntryPoint = "fic_png_encode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern PngEncodingResult fic_png_encode(byte* src_ptr, int src_length, uint width, uint height);
 
+        /// <summary>
+        ///  任意のPNGを RGBA8 にデコードする
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "fic_png_decode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern PngDecodingResult fic_png_decode(byte* src_ptr, int src_length);
+
         [DllImport(__DllName, EntryPoint = "fic_png_dispose", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern void fic_png_dispose(PngEncodingResult result);
+
+        [DllImport(__DllName, EntryPoint = "fic_png_decode_dispose", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern void fic_png_decode_dispose(PngDecodingResult result);
 
 
     }
@@ -48,6 +57,19 @@ namespace FastImageConversion
     {
         [MarshalAs(UnmanagedType.U1)] public bool success;
         public ByteBuffer output;
+        public byte* error_message;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe partial struct PngDecodingResult
+    {
+        [MarshalAs(UnmanagedType.U1)] public bool success;
+        /// <summary>
+        ///  RGBA8 (R,G,B,A の順で1チャンネル1バイト)
+        /// </summary>
+        public ByteBuffer output;
+        public uint width;
+        public uint height;
         public byte* error_message;
     }
 

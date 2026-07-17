@@ -34,6 +34,14 @@ namespace FastImageConversion
         [return: MarshalAs(UnmanagedType.U1)]
         internal static extern bool fpng_encode_image_to_memory(void* image, uint width, uint height, uint num_chans, byte** out_data, nuint* out_size, void** out_context, uint flags);
 
+        /// <summary>
+        ///  fpngが出力したPNGのみデコード可能。
+        ///  戻り値はfpng::FPNG_DECODE_* のエラーコード (0 = success)。
+        ///  1 (FPNG_DECODE_NOT_FPNG) が返った場合は汎用PNGデコーダーへフォールバックすること。
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "fpng_decode_memory", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int fpng_decode_memory(void* image, uint image_size, byte** out_data, nuint* out_size, uint* out_width, uint* out_height, uint* out_channels_in_file, uint desired_channels, void** out_context);
+
         [DllImport(__DllName, EntryPoint = "fpng_free", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern void fpng_free(void* context);
 

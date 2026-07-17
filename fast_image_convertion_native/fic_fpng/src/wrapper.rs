@@ -19,5 +19,18 @@ unsafe extern "C" {
     ) -> bool;
 }
 unsafe extern "C" {
+    pub fn fpng_decode_memory_wrapper(
+        image: *const ::std::os::raw::c_void,
+        image_size: u32,
+        out_data: *mut *mut u8,
+        out_size: *mut usize,
+        out_width: *mut u32,
+        out_height: *mut u32,
+        out_channels_in_file: *mut u32,
+        desired_channels: u32,
+        out_context: *mut *mut ::std::os::raw::c_void,
+    ) -> i32;
+}
+unsafe extern "C" {
     pub fn fpng_free_wrapper(context: *mut ::std::os::raw::c_void);
 }
