@@ -24,30 +24,52 @@ Unlike `UnityEngine.ImageConversion`, every API is callable **from any thread** 
 
 ## Performance
 
-Median of 20 runs, 360x280 RGBA8 synthetic photo-like test image, Apple M4, inside the Unity 6000.3 Editor.
-Measured with [Unity Performance Testing](https://docs.unity3d.com/Packages/com.unity.test-framework.performance@3.1/manual/index.html) — see `Assets/Tests/ImageConversionPerformanceTests.cs` to reproduce.
+Median of 20 runs on RGBA8 synthetic photo-like test images, Apple M4, inside the Unity 6000.3 Editor.
+Measured with [Unity Performance Testing](https://docs.unity3d.com/Packages/com.unity.test-framework.performance@3.1/manual/index.html) at 360x280 / 1024x1024 / 2048x2048 / 4096x4096 — see `Assets/Tests/ImageConversionPerformanceTests.cs` to reproduce. Two representative sizes are shown below; encode is roughly 5-7x faster and WebP decode up to ~10x faster than `UnityEngine.ImageConversion` across all measured sizes.
 
 ### Encode
 
 vs `UnityEngine.ImageConversion.EncodeNativeArrayToPNG`:
 
+**360x280 (thumbnail)**
+
 |                                     | latency (median) | vs UnityEngine | encoded size |
 |-------------------------------------|-----------------|----------------|--------------|
-| UnityEngine.ImageConversion (PNG)   | 3.61 ms         | 1.0x (baseline) | 152,839 B    |
-| FastImageConversion PNG (image-rs)  | **0.54 ms**     | **6.7x faster** | 228,182 B    |
-| FastImageConversion PNG (fpng)      | **0.56 ms**     | **6.4x faster** | 246,197 B    |
-| FastImageConversion WebP (lossy, default config) | **0.86 ms** | **4.2x faster** | 4,360 B |
+| UnityEngine.ImageConversion (PNG)   | 3.53 ms         | 1.0x (baseline) | 152,839 B    |
+| FastImageConversion PNG (image-rs)  | **0.52 ms**     | **6.8x faster** | 228,182 B    |
+| FastImageConversion PNG (fpng)      | **0.54 ms**     | **6.5x faster** | 246,197 B    |
+| FastImageConversion WebP (lossy, default config) | **0.83 ms** | **4.3x faster** | 4,360 B |
+
+**4096x4096 (large image)**
+
+|                                     | latency (median) | vs UnityEngine | encoded size |
+|-------------------------------------|-----------------|----------------|--------------|
+| UnityEngine.ImageConversion (PNG)   | 557.3 ms        | 1.0x (baseline) | 19,935,689 B |
+| FastImageConversion PNG (image-rs)  | **108.4 ms**    | **5.1x faster** | 37,606,042 B |
+| FastImageConversion PNG (fpng)      | **93.0 ms**     | **6.0x faster** | 40,360,776 B |
+| FastImageConversion WebP (lossy, default config) | **115.7 ms** | **4.8x faster** | 225,230 B |
 
 ### Decode
 
 vs `UnityEngine.ImageConversion.LoadImage`:
 
+**360x280 (thumbnail)**
+
 |                                     | latency (median) | vs UnityEngine |
 |-------------------------------------|-----------------|----------------|
-| UnityEngine ImageConversion.LoadImage (PNG) | 1.78 ms | 1.0x (baseline) |
-| FastImageConversion PNG (image-rs)  | **0.58 ms**     | **3.1x faster** |
-| FastImageConversion PNG (fpng)      | **0.72 ms**     | **2.5x faster** |
-| FastImageConversion WebP            | **0.24 ms**     | **7.4x faster** |
+| UnityEngine ImageConversion.LoadImage (PNG) | 1.71 ms | 1.0x (baseline) |
+| FastImageConversion PNG (image-rs)  | **0.59 ms**     | **2.9x faster** |
+| FastImageConversion PNG (fpng)      | **0.70 ms**     | **2.5x faster** |
+| FastImageConversion WebP            | **0.24 ms**     | **7.3x faster** |
+
+**4096x4096 (large image)**
+
+|                                     | latency (median) | vs UnityEngine |
+|-------------------------------------|-----------------|----------------|
+| UnityEngine ImageConversion.LoadImage (PNG) | 272.7 ms | 1.0x (baseline) |
+| FastImageConversion PNG (image-rs)  | **96.1 ms**     | **2.8x faster** |
+| FastImageConversion PNG (fpng)      | **128.9 ms**    | **2.1x faster** |
+| FastImageConversion WebP            | **27.7 ms**     | **9.9x faster** |
 
 Notes:
 
