@@ -136,26 +136,31 @@ File.WriteAllBytes(path, Png.EncodeTexture(texture));          // PNG (image-rs)
 File.WriteAllBytes(path, WebP.EncodeTexture(texture));         // WebP
 ```
 
-低レベル API は RGBA8 ピクセル (`ReadOnlySpan<byte>` または `NativeArray<byte>`、左上原点) を受け取り、任意のスレッドから呼び出せます:
+なお、`EncodeTexture` は利便性のためにマネージド `byte[]` を返します — GC アロケーションが発生します。
+
+低レベル API は RGBA8 ピクセル (`ReadOnlySpan<byte>` または `NativeArray<byte>`、左上原点) を受け取り、任意のスレッドから呼び出せます。エンコード結果はネイティブメモリ上にあるため、`AsSpan()` 経由で書き出せば**マネージドメモリの確保はゼロ**です:
 
 ```csharp
-// PNG
+// PNG — ゼロコピーでファイルへ書き出し
 using (var encoded = FPng.Encode(pixels, width, height))
+using (var file = File.OpenWrite(path))
 {
-    File.WriteAllBytes(path, encoded.ToArray());
+    file.Write(encoded.AsSpan());
 }
 
 // WebP (設定を明示する場合)
 var config = WebP.CreateConfig(WebPPreset.Picture, qualityFactor: 75f);
 // ほかに WebP.CreateFastConfig() (デフォルト) / WebP.CreateLosslessConfig() もあります
 using (var encoded = WebP.Encode(pixels, width, height, config))
+using (var file = File.OpenWrite(path))
 {
-    File.WriteAllBytes(path, encoded.ToArray());
+    file.Write(encoded.AsSpan());
 }
 ```
 
 結果のハンドルはネイティブメモリを所有しており、`using` などで Dispose すると解放されます。
-`AsNativeArray()` / `AsSpan()` はそのメモリへのゼロコピーのビュー、`ToArray()` はマネージド配列へのコピーです。
+`AsNativeArray()` / `AsSpan()` はそのメモリへのゼロコピーのビューで、ハンドルを Dispose するまで有効です。
+`ToArray()` は新しいマネージド配列へのコピー (GC アロケーション) なので、`byte[]` が本当に必要な場合のみ使ってください。
 
 ### デコード
 

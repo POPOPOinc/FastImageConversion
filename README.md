@@ -136,26 +136,31 @@ File.WriteAllBytes(path, Png.EncodeTexture(texture));          // PNG (image-rs)
 File.WriteAllBytes(path, WebP.EncodeTexture(texture));         // WebP
 ```
 
-The low-level APIs take RGBA8 pixels (`ReadOnlySpan<byte>` or `NativeArray<byte>`, top-left origin) and are callable from any thread:
+Note that `EncodeTexture` returns a managed `byte[]` for convenience — it allocates GC memory.
+
+The low-level APIs take RGBA8 pixels (`ReadOnlySpan<byte>` or `NativeArray<byte>`, top-left origin) and are callable from any thread. The encoded result stays in native memory, so writing it out through `AsSpan()` allocates **no managed memory at all**:
 
 ```csharp
-// PNG
+// PNG — zero-copy write to a file
 using (var encoded = FPng.Encode(pixels, width, height))
+using (var file = File.OpenWrite(path))
 {
-    File.WriteAllBytes(path, encoded.ToArray());
+    file.Write(encoded.AsSpan());
 }
 
 // WebP with an explicit config
 var config = WebP.CreateConfig(WebPPreset.Picture, qualityFactor: 75f);
 // also: WebP.CreateFastConfig() (default) / WebP.CreateLosslessConfig()
 using (var encoded = WebP.Encode(pixels, width, height, config))
+using (var file = File.OpenWrite(path))
 {
-    File.WriteAllBytes(path, encoded.ToArray());
+    file.Write(encoded.AsSpan());
 }
 ```
 
 The result handles own native memory; disposing them (e.g. with `using`) frees it.
-`AsNativeArray()` / `AsSpan()` are zero-copy views into that memory; `ToArray()` copies it into a managed array.
+`AsNativeArray()` / `AsSpan()` are zero-copy views into that memory, valid until the handle is disposed.
+`ToArray()` copies the bytes into a new managed array (GC allocation) — use it only when a `byte[]` is actually required.
 
 ### Decode
 
