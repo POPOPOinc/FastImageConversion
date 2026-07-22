@@ -1,11 +1,11 @@
 {
     "name": "com.popopo.fastimageconversion.webp",
-    "version": "1.153.5",
+    "version": "1.0.0",
     "displayName": "FastImageConversion.Webp",
     "description": "",
     "unity": "2022.3",
-    "author": "Popopo Inc.",
+    "author": "POPOPO Inc.",
     "dependencies": {
-        "com.popopo.fastimageconversion.core": "1.136.0"
+        "com.popopo.fastimageconversion.core": "1.0.0"
     }
 }
