@@ -31,6 +31,14 @@ Measured with [Unity Performance Testing](https://docs.unity3d.com/Packages/com.
 
 vs `UnityEngine.ImageConversion.EncodeNativeArrayToPNG`:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/benchmark_encode_dark.svg">
+  <img src="docs/images/benchmark_encode.svg" alt="Encode latency chart: FastImageConversion is 4.3-6.8x faster than UnityEngine.ImageConversion" width="760">
+</picture>
+
+<details>
+<summary>Raw numbers (including encoded sizes)</summary>
+
 **360x280 (thumbnail)**
 
 |                                     | latency (median) | vs UnityEngine | encoded size |
@@ -49,9 +57,19 @@ vs `UnityEngine.ImageConversion.EncodeNativeArrayToPNG`:
 | FastImageConversion PNG (fpng)      | **93.0 ms**     | **6.0x faster** | 40,360,776 B |
 | FastImageConversion WebP (lossy, default config) | **115.7 ms** | **4.8x faster** | 225,230 B |
 
+</details>
+
 ### Decode
 
 vs `UnityEngine.ImageConversion.LoadImage`:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/benchmark_decode_dark.svg">
+  <img src="docs/images/benchmark_decode.svg" alt="Decode latency chart: FastImageConversion is 2.1-9.9x faster than UnityEngine.ImageConversion" width="760">
+</picture>
+
+<details>
+<summary>Raw numbers</summary>
 
 **360x280 (thumbnail)**
 
@@ -70,6 +88,8 @@ vs `UnityEngine.ImageConversion.LoadImage`:
 | FastImageConversion PNG (image-rs)  | **96.1 ms**     | **2.8x faster** |
 | FastImageConversion PNG (fpng)      | **128.9 ms**    | **2.1x faster** |
 | FastImageConversion WebP            | **27.7 ms**     | **9.9x faster** |
+
+</details>
 
 Notes:
 
