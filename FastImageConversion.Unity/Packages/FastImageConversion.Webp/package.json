@@ -2,7 +2,7 @@
     "name": "com.popopo.fastimageconversion.webp",
     "version": "1.0.0",
     "displayName": "FastImageConversion.Webp",
-    "description": "",
+    "description": "Fast WebP encoder/decoder for Unity backed by libwebp. Callable from any thread.",
     "unity": "2022.3",
     "author": "POPOPO Inc.",
     "dependencies": {

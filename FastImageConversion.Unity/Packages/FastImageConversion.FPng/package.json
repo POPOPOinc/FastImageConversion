@@ -2,7 +2,7 @@
     "name": "com.popopo.fastimageconversion.fpng",
     "version": "1.0.0",
     "displayName": "FastImageConversion.FPng",
-    "description": "",
+    "description": "Very fast PNG encoder/decoder for Unity backed by fpng (SSE-optimized). Callable from any thread.",
     "unity": "2022.3",
     "author": "POPOPO Inc.",
     "dependencies": {

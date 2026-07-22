@@ -2,7 +2,7 @@
     "name": "com.popopo.fastimageconversion.png",
     "version": "1.0.0",
     "displayName": "FastImageConversion.Png",
-    "description": "",
+    "description": "Fast PNG encoder/decoder for Unity backed by image-rs/png. Callable from any thread.",
     "unity": "2022.3",
     "author": "POPOPO Inc.",
     "dependencies": {

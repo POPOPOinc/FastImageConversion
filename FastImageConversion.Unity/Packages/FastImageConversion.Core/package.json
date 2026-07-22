@@ -2,7 +2,7 @@
     "name": "com.popopo.fastimageconversion.core",
     "version": "1.0.0",
     "displayName": "FastImageConversion.Core",
-    "description": "",
+    "description": "Shared utilities for FastImageConversion (pixel conversion helpers and native memory handles).",
     "unity": "2022.3",
     "author": "POPOPO Inc."
 }
